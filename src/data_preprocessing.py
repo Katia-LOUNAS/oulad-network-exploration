@@ -23,6 +23,12 @@ def load_raw_data(data_dir, debug=False):
         "studentAssessment": pd.read_csv(data_path / "studentAssessment.csv"),
     }
 
+    # little nettoyage 
+    dfs["studentVle"] = dfs["studentVle"].dropna(subset=["id_student", "id_site", "code_module", "code_presentation"])
+    dfs["studentVle"]["sum_click"] = pd.to_numeric(dfs["studentVle"]["sum_click"], errors="coerce").fillna(0).astype(int)
+    if "is_banked" in dfs["studentAssessment"].columns:
+        dfs["studentAssessment"]["is_banked"] = dfs["studentAssessment"]["is_banked"].fillna(0).astype(int)
+
     if debug:
         print("All CSV files loaded successfully!")
         for name, df in dfs.items():
@@ -82,6 +88,10 @@ def build_student_activity_matrix(dfs, module, presentation, debug=False):
     df = dfs["studentVle"]
     df = df[(df["code_module"] == module) & (df["code_presentation"] == presentation)]
 
+    # delete id missing if their persist before the pivot
+    df = df.dropna(subset=["id_student", "id_site"]) 
+
+
     # create pivot table => so the matrix
     pivot = df.pivot_table(
         index="id_student",
@@ -113,6 +123,8 @@ def build_student_assessment_table(dfs, debug=False):
     )
 
     # we remove old transferred grades (is_banked == 1) -> he didn't really work this year
+    if "is_banked" in df.columns:
+        df["is_banked"] = df["is_banked"].fillna(0).astype(int)
     df = df[df["is_banked"] == 0]
 
     if debug:
@@ -126,7 +138,7 @@ def normalize_rows_max(X):
     just simple normalization: divide each row by its max.
     -> reduces the effect of very big click counts.
     """
-    X = X.copy()
+    X = X.copy().fillna(0)
     row_max = X.max(axis=1).replace(0, 1)
     X = X.div(row_max, axis=0)
     return X
@@ -146,5 +158,24 @@ def load_and_prepare_oulad(data_dir, module, presentation, debug=False):
     activity_matrix = build_student_activity_matrix(dfs, module, presentation, debug=debug) # matrice for 
     assessment_data = build_student_assessment_table(dfs, debug=debug) # link eval and mark
 
+    if debug:
+        print("\n=== Missing values summary ===")
+        print(f"student_data : {student_data.isna().sum().sum()} valeurs manquantes")
+        print(f"activity_matrix : {activity_matrix.isna().sum().sum()} valeurs manquantes")
+        print(f"assessment_data : {assessment_data.isna().sum().sum()} valeurs manquantes")
+        
+        print("\nTop colonnes avec NA — student_data")
+        print(student_data.isna().sum().sort_values(ascending=False).head(10))
+        print("\nTop colonnes avec NA — assessment_data")
+        print(assessment_data.isna().sum().sort_values(ascending=False).head(10))
+        print("================================\n")
+
     return student_data, activity_matrix, assessment_data
 
+def main_test():
+    data_dir = "data"
+    module = "AAA"         
+    presentation = "2013J" 
+    _,_,_ = load_and_prepare_oulad(data_dir, module, presentation, debug=True)
+
+# main_test()
