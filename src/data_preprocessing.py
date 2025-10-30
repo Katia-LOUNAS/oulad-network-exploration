@@ -1,13 +1,13 @@
 import pandas as pd 
 from pathlib import Path
+import numpy as np 
 
-# =============================================
+# ===================================================
 # This file loads and prepares the OULAD dataset
-# for the part based on graph for students.
 #
 # We merge the main tables and build a clean dataset
-# with information and activity of students.
-# =============================================
+# with information and activity of students we need.
+# ===================================================
 
 def load_raw_data(data_dir, debug=False):
     """load all csv files present for the project oulad"""
@@ -144,6 +144,9 @@ def normalize_rows_max(X):
     return X
 
 
+###### 
+
+
 def load_and_prepare_oulad(data_dir, module, presentation, debug=False):
     """
     pipeline for load and prepare the data.
@@ -171,6 +174,15 @@ def load_and_prepare_oulad(data_dir, module, presentation, debug=False):
         print("================================\n")
 
     return student_data, activity_matrix, assessment_data
+
+def tfidf_rows(X):
+    Xb = X.copy().astype(float)
+    df = (Xb > 0).sum(axis=0).replace(0, 1)
+    N = Xb.shape[0]
+    idf = np.log(N / df)
+    Xw = Xb * idf
+    row_norm = np.sqrt((Xw**2).sum(axis=1)).replace(0, 1)
+    return Xw.div(row_norm, axis=0)
 
 def main_test():
     data_dir = "data"

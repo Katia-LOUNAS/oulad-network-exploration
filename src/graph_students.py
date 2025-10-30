@@ -3,20 +3,21 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from collections import Counter, defaultdict
+from networkx.algorithms.community import girvan_newman
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-try: # try Louvain if available (optional)
-    import community as community_louvain  # package: python-louvain
+try: # try Louvain if available 
+    import community as community_louvain 
     HAVE_LOUVAIN = True
 except Exception:
     HAVE_LOUVAIN = False
 
 try:
-    import igraph as ig  # pour Infomap
+    import igraph as ig  # for Infomap
     HAVE_IGRAPH = True
 except Exception:
     HAVE_IGRAPH = False
-
 
 
 # =============================================
@@ -98,7 +99,6 @@ def evaluate_partition(G, part_dict):
         "sizes": sizes.to_dict()
     }
 
-
 def compute_purity(part, labels: pd.Series):
     """part: dict node->community ; labels: Series index=node -> class label"""
     groups = defaultdict(list)
@@ -139,9 +139,6 @@ def detect_communities_girvan_newman(G, max_levels=4):
     Girvan–Newman hiérarchique : on calcule plusieurs partitions successives et
     on choisit celle qui maximise la modularité parmi les premiers niveaux.
     """
-    from networkx.algorithms.community import girvan_newman
-    import itertools
-
     best_part = None
     best_mod = -1.0
     comp_gen = girvan_newman(G)
@@ -187,3 +184,25 @@ def detect_communities(G, method="auto"):
         return detect_communities_infomap(G)
     else:
         raise ValueError(f"Unknown method: {method}")
+
+
+
+### fonction utilitaire 
+
+def eval_partition(G, part_dict, labels):
+    """Return metrics dict: modularity, n_comms, purity, NMI, ARI."""
+    ev = evaluate_partition(G, part_dict)
+    nodes = list(set(G.nodes()).intersection(labels.index))
+    y_true = labels.loc[nodes].values
+    y_pred = pd.Series(part_dict).reindex(nodes).values
+    nmi = normalized_mutual_info_score(y_true, y_pred)
+    ari = adjusted_rand_score(y_true, y_pred)
+    purity, _, _ = compute_purity(part_dict, labels)
+    return dict(
+        modularity=float(ev["modularity"]),
+        n_communities=int(ev["n_communities"]),
+        purity=float(purity),
+        NMI=float(nmi),
+        ARI=float(ari)
+    )
+
