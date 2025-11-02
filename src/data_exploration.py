@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns 
 
-def summarize_datasets(datasets: dict):
+def summarize_datasets(datasets):
     """
     Explore multiple datasets (OULAD CSVs).
     For each dataset:
@@ -45,6 +45,7 @@ def summarize_datasets(datasets: dict):
     summary_df = pd.DataFrame(summaries).set_index("Dataset")
 
     return summary_df
+
 
 def global_summary(summary_df):
     
