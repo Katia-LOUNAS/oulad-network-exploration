@@ -15,13 +15,13 @@ The main goal is to leverage **graph theory** and **complex network analysis** t
 
 Two complementary approaches are explored:
 
-###  **Approach 1 — Student–Student Network: Community Detection and Pattern Mining**
+###  **Approach 1 : Student–Student Network: Community Detection and Pattern Mining**
 - Construction of a student interaction graph.  
 - Application of several community detection algorithms (Louvain, Infomap, Label Propagation…).  
 - Evaluation of modularity and topological properties (degree, centrality, density, clustering).  
 - Behavioral interpretation of communities through pattern mining.  
 
-###  **Approach 2 — Student–Resource Bipartite Network: Modeling and Exploration**
+###  **Approach 2 : Student–Resource Bipartite Network: Modeling and Exploration**
 - Construction of a bipartite graph between students and learning resources from VLE activity logs.  
 - Study of connectivity and projections onto student or resource subnetworks.  
 - Detection of mixed communities and identification of learning profiles.  
